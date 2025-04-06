@@ -49,30 +49,57 @@ To run the synthesizer, simply execute:
    - Adjust the frequency and gain using the sliders
    - Click the Gate button again to turn the sound off
 
-## Troubleshooting
+## Audio Setup and Troubleshooting
 
-### ALSA Issues
+### ALSA Configuration
 
-If you encounter ALSA errors, try the following:
-
-1. Check if ALSA is properly installed:
+1. Check available audio devices:
 ```bash
 aplay -l
 ```
 
-2. If you see multiple audio devices, you can specify which one to use by modifying the `init_alsa()` function in `gtk_interface.cpp`:
+2. If you have multiple audio devices, you can specify which one to use by modifying the `init_alsa()` function in `gtk_interface.cpp`:
 ```cpp
 snd_pcm_open(&playback_handle, "hw:1", SND_PCM_STREAM_PLAYBACK, 0)
 ```
-Replace "hw:1" with your desired audio device.
+Replace "hw:1" with your desired audio device number.
 
 ### Real-time Scheduling Issues
 
-If you see messages about real-time scheduling, you may need to add your user to the audio group:
+If you see messages about real-time scheduling, you may need to:
+
+1. Add your user to the audio group:
 ```bash
 sudo usermod -a -G audio $USER
 ```
-Then log out and log back in for the changes to take effect.
+
+2. Add real-time scheduling limits:
+```bash
+sudo nano /etc/security/limits.conf
+```
+Add these lines at the end of the file:
+```
+@audio - rtprio 95
+@audio - memlock unlimited
+```
+
+3. Log out and log back in for the changes to take effect.
+
+### Common Audio Issues
+
+1. **No sound output**:
+   - Check if ALSA is properly installed: `aplay -l`
+   - Verify your audio device is not muted: `alsamixer`
+   - Try different audio devices by modifying the `init_alsa()` function
+
+2. **Audio latency or glitches**:
+   - Check if real-time scheduling is enabled
+   - Try adjusting the buffer size in the `init_alsa()` function
+   - Close other audio applications that might be using the device
+
+3. **Permission issues**:
+   - Ensure your user is in the audio group
+   - Check file permissions for audio devices in `/dev/snd/`
 
 ## License
 
